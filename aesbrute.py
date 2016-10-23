@@ -22,17 +22,19 @@ def decrypt(ciphertextbase64, iv, key2, key1spacechars):
             cipher = AES.new(bytes.fromhex(''.join([key1space, key1suffix, key2])),
                              AES.MODE_CBC,
                              IV=bytes.fromhex(iv))
+
             try:
                 msg = cipher.decrypt(ciphertext).decode('utf-8').rstrip('\x0e')
-                if ((c.isprintable() | c.isspace()) for c in msg):
-                    print('Key: ' + ''.join([key1space, key1suffix, key2]) + '\n' + msg)
-                    if input('Continue searching? y/n') == 'y':
-                        continue
-                    else:
-                        return msg
-                else:
-                    continue
             except UnicodeDecodeError:
+                continue
+
+            if ((c.isprintable() | c.isspace()) for c in msg):
+                print(''.join(['Key: ', key1space, key1suffix, key2, '\n', msg]))
+                if input('Continue searching? y/n') == 'y':
+                    continue
+                else:
+                    return msg
+            else:
                 continue
 
     print('Decryption failed.')
