@@ -4,6 +4,7 @@ from Crypto.Cipher import AES
 import base64
 import sys
 import time
+import codecs
 import itertools
 
 __chars = '0123456789abcdef'
@@ -11,6 +12,10 @@ __chars = '0123456789abcdef'
 
 def __bruteforce(charset, length):
     return itertools.chain(''.join(x) for x in itertools.product(charset, repeat=length))
+
+
+def isaccepted(char):
+    return char.isprintable() | char.isspace()
 
 
 def decrypt(ciphertextbase64, iv, key2, key1spacechars):
@@ -24,16 +29,16 @@ def decrypt(ciphertextbase64, iv, key2, key1spacechars):
                              IV=bytes.fromhex(iv))
 
             try:
-                msg = cipher.decrypt(ciphertext).decode('utf-8').rstrip('\x0e')
+                msg = cipher.decrypt(ciphertext).decode('utf-8').rstrip()
             except UnicodeDecodeError:
                 continue
 
-            if ((c.isprintable() | c.isspace()) for c in msg):
-                print(''.join(['Key: ', key1space, key1suffix, key2, '\n', msg]))
-                if input('Continue searching? y/n') == 'y':
-                    continue
-                else:
-                    return msg
+            if ((isaccepted(c)) for c in msg):
+                key = ''.join([key1space, key1suffix, key2])
+                with codecs.open('.'.join([key[:16], 'txt']), 'w', 'utf-8') as file:
+                    file.write('\n'.join([ciphertextbase64, iv, key, msg]))
+                print(''.join(['Key: ', key, '\n', msg]))
+                return msg
             else:
                 continue
 
